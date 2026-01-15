@@ -1,11 +1,8 @@
 "use client";
 
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TextAlign from "@tiptap/extension-text-align";
-import Link from "@tiptap/extension-link";
-import Underline from "@tiptap/extension-underline";
-import { useEffect, useCallback } from "react";
+import type { JSONContent } from "@tiptap/core";
+import { useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -20,12 +17,12 @@ import {
   ListOrdered,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { emailEditorExtensions } from "@/lib/tiptap-extensions";
 
 interface TiptapEditorProps {
-  content: string;
-  onUpdate: (content: string) => void;
+  content: JSONContent;
+  onUpdate: (content: JSONContent) => void;
   className?: string;
-  placeholder?: string;
   textColor?: string;
 }
 
@@ -33,35 +30,14 @@ export function TiptapEditor({
   content,
   onUpdate,
   className,
-  placeholder,
   textColor,
 }: TiptapEditorProps) {
+  // Track if content change is from external source vs editor typing
+  const isExternalUpdate = useRef(false);
+
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        bulletList: {
-          HTMLAttributes: {
-            class: "list-disc pl-4",
-          },
-        },
-        orderedList: {
-          HTMLAttributes: {
-            class: "list-decimal pl-4",
-          },
-        },
-      }),
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: "text-primary underline",
-        },
-      }),
-      Underline,
-    ],
+    extensions: emailEditorExtensions,
     content,
     editorProps: {
       attributes: {
@@ -74,13 +50,22 @@ export function TiptapEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      onUpdate(editor.getHTML());
+      if (!isExternalUpdate.current) {
+        onUpdate(editor.getJSON());
+      }
     },
   });
 
+  // Sync external content changes to editor
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (editor && content) {
+      const currentJSON = JSON.stringify(editor.getJSON());
+      const newJSON = JSON.stringify(content);
+      if (currentJSON !== newJSON) {
+        isExternalUpdate.current = true;
+        editor.commands.setContent(content);
+        isExternalUpdate.current = false;
+      }
     }
   }, [content, editor]);
 

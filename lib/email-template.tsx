@@ -7,7 +7,6 @@ import {
   Row,
   Column,
   Text,
-  Heading,
   Button,
   Img,
   Hr,
@@ -28,6 +27,7 @@ import type {
   SocialLinksBlock,
   FooterBlock,
 } from "@/types/email-builder";
+import { renderTiptapToReactEmail } from "./tiptap-react-email-renderer";
 
 interface EmailTemplateProps {
   document: EmailDocument;
@@ -96,36 +96,26 @@ function BlockRenderer({ block }: { block: EmailBlock }) {
 
 function HeadingBlockRenderer({ block }: { block: HeadingBlock }) {
   const fontSize = block.level === 1 ? 30 : block.level === 2 ? 24 : 20;
-  const as = `h${block.level}` as "h1" | "h2" | "h3";
 
   return (
-    <Heading
-      as={as}
-      style={{
-        fontSize,
-        fontWeight: "bold",
-        color: block.color,
+    <Section style={{ marginBottom: 16 }}>
+      {renderTiptapToReactEmail(block.content, {
+        textColor: block.color,
         textAlign: block.align,
-        margin: "0 0 16px 0",
-      }}
-    >
-      {block.content}
-    </Heading>
+        fontSize,
+      })}
+    </Section>
   );
 }
 
 function TextBlockRenderer({ block }: { block: TextBlock }) {
   return (
-    <Text
-      style={{
-        fontSize: 16,
-        lineHeight: 1.6,
-        color: block.color,
+    <Section style={{ marginBottom: 16 }}>
+      {renderTiptapToReactEmail(block.content, {
+        textColor: block.color,
         textAlign: block.align,
-        margin: "0 0 16px 0",
-      }}
-      dangerouslySetInnerHTML={{ __html: block.content }}
-    />
+      })}
+    </Section>
   );
 }
 
@@ -321,17 +311,12 @@ function SocialLinksBlockRenderer({ block }: { block: SocialLinksBlock }) {
 
 function FooterBlockRenderer({ block }: { block: FooterBlock }) {
   return (
-    <Text
-      style={{
-        fontSize: 14,
-        lineHeight: 1.6,
-        color: block.color,
+    <Section style={{ marginBottom: 16 }}>
+      {renderTiptapToReactEmail(block.content, {
+        textColor: block.color,
         textAlign: block.align,
-        margin: "0 0 16px 0",
-        whiteSpace: "pre-line",
-      }}
-    >
-      {block.content}
-    </Text>
+        fontSize: 14,
+      })}
+    </Section>
   );
 }

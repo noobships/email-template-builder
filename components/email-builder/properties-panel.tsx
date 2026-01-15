@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -104,11 +103,10 @@ function BlockProperties({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs">Content</Label>
-            <Textarea
-              value={block.content}
-              onChange={(e) => onUpdate({ content: e.target.value })}
-              className="min-h-20 text-sm"
-            />
+            <p className="text-xs text-muted-foreground">
+              Click on the block to edit content inline with rich text
+              formatting.
+            </p>
           </div>
           <div className="space-y-2">
             <Label className="text-xs">Heading Level</Label>
@@ -134,11 +132,10 @@ function BlockProperties({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs">Content</Label>
-            <Textarea
-              value={block.content}
-              onChange={(e) => onUpdate({ content: e.target.value })}
-              className="min-h-32 text-sm"
-            />
+            <p className="text-xs text-muted-foreground">
+              Click on the block to edit content inline with rich text
+              formatting.
+            </p>
           </div>
         </div>
       );
@@ -387,11 +384,10 @@ function BlockProperties({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs">Content</Label>
-            <Textarea
-              value={block.content}
-              onChange={(e) => onUpdate({ content: e.target.value })}
-              className="min-h-32 text-sm"
-            />
+            <p className="text-xs text-muted-foreground">
+              Click on the block to edit content inline with rich text
+              formatting.
+            </p>
           </div>
         </div>
       );

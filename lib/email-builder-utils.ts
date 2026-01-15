@@ -13,6 +13,7 @@ import type {
   FooterBlock,
   BlockType,
 } from "@/types/email-builder";
+import { createEmptyContent } from "./tiptap-react-email-renderer";
 
 export function createBlock(type: BlockType): EmailBlock {
   const id = nanoid();
@@ -22,7 +23,7 @@ export function createBlock(type: BlockType): EmailBlock {
       return {
         id,
         type: "heading",
-        content: "Your Heading Here",
+        content: createEmptyContent("Your Heading Here"),
         level: 1,
         align: "center",
         color: "#000000",
@@ -32,8 +33,9 @@ export function createBlock(type: BlockType): EmailBlock {
       return {
         id,
         type: "text",
-        content:
-          "Enter your text here. You can style this text using the properties panel.",
+        content: createEmptyContent(
+          "Enter your text here. You can style this text using the properties panel."
+        ),
         align: "center",
         color: "#374151",
       } as TextBlock;
@@ -112,8 +114,9 @@ export function createBlock(type: BlockType): EmailBlock {
       return {
         id,
         type: "footer",
-        content:
-          "© 2026 Your Company. All rights reserved.\nUnsubscribe | Privacy Policy",
+        content: createEmptyContent(
+          "© 2026 Your Company. All rights reserved.\nUnsubscribe | Privacy Policy"
+        ),
         align: "center",
         color: "#6b7280",
       } as FooterBlock;

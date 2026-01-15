@@ -1,5 +1,7 @@
 import { render } from "@react-email/render";
+import { generateHTML } from "@tiptap/html";
 import { EmailTemplate } from "./email-template";
+import { emailEditorExtensions } from "./tiptap-extensions";
 import type { EmailDocument, EmailBlock } from "@/types/email-builder";
 
 /**
@@ -73,8 +75,8 @@ export default EmailTemplate
 function generateBlockCode(block: EmailBlock): string {
   switch (block.type) {
     case "heading":
-      return `<Heading
-          as="h${block.level}"
+      const headingHtml = generateHTML(block.content, emailEditorExtensions);
+      return `<Text
           style={{
             fontSize: ${block.level === 1 ? 30 : block.level === 2 ? 24 : 20},
             fontWeight: "bold",
@@ -83,10 +85,11 @@ function generateBlockCode(block: EmailBlock): string {
             margin: "0 0 16px 0",
           }}
         >
-          ${escapeJsx(block.content)}
-        </Heading>`;
+          ${escapeJsx(headingHtml)}
+        </Text>`;
 
     case "text":
+      const textHtml = generateHTML(block.content, emailEditorExtensions);
       return `<Text
           style={{
             fontSize: 16,
@@ -96,7 +99,7 @@ function generateBlockCode(block: EmailBlock): string {
             margin: "0 0 16px 0",
           }}
         >
-          ${escapeJsx(block.content)}
+          ${escapeJsx(textHtml)}
         </Text>`;
 
     case "image":
@@ -249,6 +252,7 @@ function generateBlockCode(block: EmailBlock): string {
         </Section>`;
 
     case "footer":
+      const footerHtml = generateHTML(block.content, emailEditorExtensions);
       return `<Text
           style={{
             fontSize: 14,
@@ -256,10 +260,9 @@ function generateBlockCode(block: EmailBlock): string {
             color: "${block.color}",
             textAlign: "${block.align}",
             margin: "0 0 16px 0",
-            whiteSpace: "pre-line",
           }}
         >
-          ${escapeJsx(block.content)}
+          ${escapeJsx(footerHtml)}
         </Text>`;
 
     default:

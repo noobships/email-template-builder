@@ -7,6 +7,8 @@ import type { EmailBlock } from "@/types/email-builder";
 import { cn } from "@/lib/utils";
 import { SocialIcon } from "./social-icon";
 import { TiptapEditor } from "./tiptap-editor";
+import { generateHTML } from "@tiptap/html";
+import { emailEditorExtensions } from "@/lib/tiptap-extensions";
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -66,7 +68,9 @@ export function BlockRenderer({
               textAlign: block.align,
               color: textColor || block.color,
             }}
-            dangerouslySetInnerHTML={{ __html: block.content }}
+            dangerouslySetInnerHTML={{
+              __html: generateHTML(block.content, emailEditorExtensions),
+            }}
           />
         );
 
@@ -88,7 +92,9 @@ export function BlockRenderer({
               color: textColor || block.color,
             }}
             className="text-base leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: block.content }}
+            dangerouslySetInnerHTML={{
+              __html: generateHTML(block.content, emailEditorExtensions),
+            }}
           />
         );
 
@@ -272,7 +278,9 @@ export function BlockRenderer({
               textAlign: block.align,
               color: textColor || block.color,
             }}
-            dangerouslySetInnerHTML={{ __html: block.content }}
+            dangerouslySetInnerHTML={{
+              __html: generateHTML(block.content, emailEditorExtensions),
+            }}
           />
         );
 
