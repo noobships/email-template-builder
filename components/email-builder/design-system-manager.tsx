@@ -144,6 +144,15 @@ export function DesignSystemManager({
       <SheetContent
         side="right"
         className="w-full sm:max-w-lg p-0 flex flex-col"
+        onInteractOutside={(e) => {
+          // Prevent Sheet from closing when interacting with portalled content.
+          // Select dropdowns render outside Sheet's DOM tree via Portal,
+          // so clicks on them would otherwise dismiss the Sheet.
+          const target = e.target as HTMLElement;
+          if (target.closest("[data-radix-popper-content-wrapper]")) {
+            e.preventDefault();
+          }
+        }}
       >
         <SheetHeader className="p-4 border-b shrink-0">
           <SheetTitle>Design Systems</SheetTitle>

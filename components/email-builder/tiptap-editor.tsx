@@ -80,9 +80,10 @@ export function TiptapEditor({
       className={cn(
         "rounded-md border",
         simulateMode === "dark"
-          ? "border-zinc-600 bg-zinc-800"
+          ? "border-zinc-600 bg-zinc-800 dark-simulate-editor"
           : "border-input bg-background"
       )}
+      style={simulateMode === "dark" ? { color: "#e5e7eb" } : undefined}
     >
       <EditorToolbar editor={editor} simulateMode={simulateMode} />
       <EditorContent editor={editor} />

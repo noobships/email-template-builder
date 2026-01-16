@@ -123,3 +123,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TipTap Editor - Dark Mode Email Preview Simulation
+   Forces ProseMirror content to inherit text color in dark simulate mode
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dark-simulate-editor .ProseMirror {
+  color: inherit;
+}
+
+.dark-simulate-editor .ProseMirror p,
+.dark-simulate-editor .ProseMirror h1,
+.dark-simulate-editor .ProseMirror h2,
+.dark-simulate-editor .ProseMirror h3,
+.dark-simulate-editor .ProseMirror li,
+.dark-simulate-editor .ProseMirror blockquote {
+  color: inherit;
+}
+
+/* Override Tailwind prose defaults in dark simulate mode */
+.dark-simulate-editor .prose p,
+.dark-simulate-editor .prose h1,
+.dark-simulate-editor .prose h2,
+.dark-simulate-editor .prose h3,
+.dark-simulate-editor .prose li {
+  color: inherit !important;
+}

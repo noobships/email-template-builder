@@ -43,7 +43,6 @@ interface EmailBuilderHeaderProps {
   viewMode: "desktop" | "mobile";
   onViewModeChange: (mode: "desktop" | "mobile") => void;
   simulateMode: "light" | "dark";
-  onSimulateModeChange: (mode: "light" | "dark") => void;
   editorMode: "editing" | "viewing";
   onEditorModeChange: (mode: "editing" | "viewing") => void;
   onUndo: () => void;

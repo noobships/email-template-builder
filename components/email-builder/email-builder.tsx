@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { EmailBuilderHeader } from "./header";
 import { BlockPickerToolbar } from "./block-picker-toolbar";
 import { EmailCanvas } from "./email-canvas";
@@ -35,7 +36,18 @@ function EmailBuilderInner() {
   const [document, setDocument] = useState<EmailDocument>(initialDocument);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
-  const [simulateMode, setSimulateMode] = useState<"light" | "dark">("light");
+  const { resolvedTheme } = useTheme();
+
+  // Prevent hydration mismatch - resolvedTheme is undefined during SSR
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Sync email preview simulation mode with app theme (only after mount)
+  const simulateMode: "light" | "dark" =
+    mounted && resolvedTheme === "dark" ? "dark" : "light";
+
   const [editorMode, setEditorMode] = useState<"editing" | "viewing">(
     "editing"
   );
@@ -210,7 +222,6 @@ function EmailBuilderInner() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           simulateMode={simulateMode}
-          onSimulateModeChange={setSimulateMode}
           editorMode={editorMode}
           onEditorModeChange={setEditorMode}
           onUndo={handleUndo}
@@ -226,7 +237,13 @@ function EmailBuilderInner() {
         {editorMode === "editing" && (
           <BlockPickerToolbar
             onAddBlock={handleAddBlock}
-            onManageDesignSystemClick={() => setDesignSystemManagerOpen(true)}
+            onManageDesignSystemClick={() => {
+              // Delay sheet opening to allow dropdown to fully close first.
+              // This prevents pointer-events: none conflict with the modal.
+              requestAnimationFrame(() => {
+                setDesignSystemManagerOpen(true);
+              });
+            }}
           />
         )}
 
