@@ -1,201 +1,123 @@
 # Email Template Builder
 
-A visual, drag-and-drop email builder that combines **Tiptap** for rich-text editing with **React Email** for generating cross-client compatible HTML.
+<div align="left">
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
-[![React Email](https://img.shields.io/badge/React%20Email-1.0-purple)](https://react.email/)
-[![Tiptap](https://img.shields.io/badge/Tiptap-3.15-orange)](https://tiptap.dev/)
+**Visual Email Builder** — Tiptap × React Email × Next.js
 
----
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-000000?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React Email](https://img.shields.io/badge/React_Email-1.0-white?style=for-the-badge&logo=react&logoColor=black)](https://react.email/)
+[![MIT License](https://img.shields.io/badge/License-MIT-000000?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 
-## ✨ Features
+</div>
 
-- **Visual Block Editor** — Drag-and-drop blocks: headings, text, images, buttons, columns, dividers, social links, and footers
-- **Rich Text Editing** — Full formatting toolbar (bold, italic, underline, links, lists) powered by Tiptap
-- **Email-Safe Output** — All content rendered through React Email components for cross-client compatibility
-- **Multiple Export Options** — Export as HTML or as a reusable React Email `.tsx` template
-- **Dark Mode Preview** — Toggle between light/dark mode to preview how emails will render
-- **Undo/Redo History** — Full editing history with keyboard shortcuts
+> A drag-and-drop email builder that combines **Tiptap** for rich-text editing with **React Email** for generating cross-client compatible HTML. Build beautiful, responsive emails visually—export as HTML or reusable React Email templates.
 
----
+## Features
 
-## 🚀 Quick Start
+| **Core**                               | **Export**                      |
+| :------------------------------------- | :------------------------------ |
+| Visual block editor with drag-and-drop | HTML file for any email service |
+| Rich text editing powered by Tiptap    | React Email `.tsx` templates    |
+| Dark mode preview                      |                                 |
+| Design system support                  |                                 |
+| Undo/redo with keyboard shortcuts      |                                 |
+
+## Quick Start
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
 
----
+## Architecture
 
-## 🏗️ Architecture
-
-This project demonstrates the **proper integration** of Tiptap with React Email using the [Static Renderer](https://tiptap.dev/docs/editor/api/utilities/static-renderer).
-
-### Why Static Renderer?
-
-Instead of using `dangerouslySetInnerHTML` (which bypasses React Email's benefits), we use Tiptap's static renderer to map editor nodes directly to React Email components:
+Integration of Tiptap with React Email using the Static Renderer:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    User Edits in Tiptap                     │
-│                                                             │
-│   TiptapEditor → editor.getJSON() → JSONContent stored      │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-              ┌──────────────┴──────────────┐
-              ▼                              ▼
-┌─────────────────────────┐    ┌─────────────────────────────┐
-│     Canvas Preview      │    │      Email Export           │
-│                         │    │                             │
-│  generateHTML() from    │    │  renderTiptapToReactEmail() │
-│  @tiptap/html           │    │  → React Email components   │
-│  → dangerouslySetHTML   │    │  → render() → .html         │
-└─────────────────────────┘    └─────────────────────────────┘
+User Edits in Tiptap
+        │
+        ▼
+TiptapEditor → editor.getJSON() → JSONContent stored
+        │
+        ├──────────────────────────────────┐
+        ▼                                  ▼
+   Canvas Preview                    Email Export
+   @tiptap/html                      @tiptap/static-renderer
+   → HTML for display                → React Email components
+                                     → render() → .html
 ```
 
-### Key Integration Points
+| Layer       | Technology                            | Purpose                                   |
+| :---------- | :------------------------------------ | :---------------------------------------- |
+| **Editing** | Tiptap                                | WYSIWYG rich-text editor with JSON output |
+| **Preview** | @tiptap/html                          | Convert JSON → HTML for canvas display    |
+| **Export**  | @tiptap/static-renderer + React Email | Map Tiptap nodes → React Email components |
 
-| Layer       | Technology                              | Purpose                                   |
-| ----------- | --------------------------------------- | ----------------------------------------- |
-| **Editing** | Tiptap                                  | WYSIWYG rich-text editor with JSON output |
-| **Preview** | `@tiptap/html`                          | Convert JSON → HTML for canvas display    |
-| **Export**  | `@tiptap/static-renderer` + React Email | Map Tiptap nodes → React Email components |
+## Block Types
 
----
+| Block            | Description                        |
+| :--------------- | :--------------------------------- |
+| **Heading**      | H1/H2/H3 with alignment and color  |
+| **Text**         | Paragraph with full formatting     |
+| **Image**        | Images with src, alt, dimensions   |
+| **Button**       | CTA buttons with links and styling |
+| **Header**       | Brand header with logo             |
+| **Columns**      | 2 or 3 column layouts              |
+| **Divider**      | Horizontal rules                   |
+| **Spacer**       | Vertical spacing                   |
+| **Social Links** | Social media icons                 |
+| **Footer**       | Footer text with formatting        |
 
-## 📁 Project Structure
+## Tech Stack
 
-```
-├── app/
-│   └── page.tsx                        # Entry point
-│
-├── components/email-builder/           # Email builder UI
-│   ├── email-builder.tsx               # Main component, state management
-│   ├── header.tsx                      # Top bar: preview, export buttons
-│   ├── elements-sidebar.tsx            # Left panel: block palette
-│   ├── email-canvas.tsx                # Center: preview area
-│   ├── block-renderer.tsx              # Renders blocks visually
-│   ├── properties-panel.tsx            # Right panel: block settings
-│   ├── tiptap-editor.tsx               # Rich text editor (Tiptap)
-│   └── social-icon.tsx                 # Social media icons
-│
-├── lib/                                # Core utilities
-│   ├── tiptap-extensions.ts            # Shared Tiptap extension config
-│   ├── tiptap-react-email-renderer.tsx # Tiptap → React Email mapping
-│   ├── email-template.tsx              # React Email template component
-│   ├── email-renderer.tsx              # Export functions (HTML & .tsx)
-│   ├── email-builder-utils.ts          # Block factory (createBlock)
-│   └── utils.ts                        # General utilities
-│
-├── types/
-│   └── email-builder.ts                # TypeScript types (uses JSONContent)
-│
-└── docs/tiptap/                        # Tiptap documentation reference
-```
+| Frontend       | Editor                  | Email           |
+| :------------- | :---------------------- | :-------------- |
+| Next.js 16     | Tiptap 3.15             | React Email 1.0 |
+| Radix UI       | @tiptap/static-renderer |                 |
+| Tailwind CSS 4 |                         |                 |
 
----
+## Roadmap
 
-## 🔧 Key Files
+### Completed
 
-### Tiptap + React Email Integration
+- [x] Dark mode support for templates and blocks
+- [x] Design systems picker fix
 
-| File                                                                         | Purpose                                                         |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| [`lib/tiptap-extensions.ts`](lib/tiptap-extensions.ts)                       | Shared extension config used by both editor and static renderer |
-| [`lib/tiptap-react-email-renderer.tsx`](lib/tiptap-react-email-renderer.tsx) | Maps Tiptap nodes/marks to React Email components               |
+### In Progress
 
-```tsx
-// Example: Mapping Tiptap paragraph → React Email Text
-nodeMapping: {
-  paragraph: ({ children }) => (
-    <Text style={{ fontSize: 16, lineHeight: 1.6 }}>
-      {children}
-    </Text>
-  ),
-}
-```
+- [ ] Move project to pnpm
+- [ ] Create tiptap-to-react-email package
+- [ ] Add auth and database for persistent data
+- [ ] Add canvas support
+- [ ] Add react drag for dragging blocks
+- [ ] Add output format preview (HTML, React Email, etc.)
+- [ ] Multiple export formats (PDF, SVG, image, HTML, React Email)
+- [ ] Keyboard shortcuts (delete key to remove blocks)
+- [ ] All 18 React Email blocks support
+- [ ] Proper email widths according to standards
+- [ ] OG tags for metadata/thumbnails
+- [ ] SVG animations for better UX
+- [ ] Real font and asset management
+- [ ] Auto design system maker (similar to new.email)
+- [ ] Fix Column block behavior
 
-### Editing Layer
+### Planned
 
-| File                                                                | Purpose                                  |
-| ------------------------------------------------------------------- | ---------------------------------------- |
-| [`tiptap-editor.tsx`](components/email-builder/tiptap-editor.tsx)   | Rich text editor with formatting toolbar |
-| [`block-renderer.tsx`](components/email-builder/block-renderer.tsx) | Visual preview of blocks in canvas       |
+- [ ] Template gallery from community
+- [ ] Email strategizer/mapper (AI-powered template generation)
+- [ ] Multiple languages support (i18n)
+- [ ] Auto brand/kit design system configuration
+- [ ] Multiple template designs in one shot
+- [ ] Template branching/duplication/variants
+- [ ] Advanced templates (carousels, GIF animations)
 
-### Export Layer
+## Contributing
 
-| File                                           | Purpose                                                 |
-| ---------------------------------------------- | ------------------------------------------------------- |
-| [`email-template.tsx`](lib/email-template.tsx) | React Email component using static renderer             |
-| [`email-renderer.tsx`](lib/email-renderer.tsx) | `renderEmailToHtml()` and `generateEmailTemplateCode()` |
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
----
+## License
 
-## 📦 Block Types
-
-| Block            | Description                       | Content Type              |
-| ---------------- | --------------------------------- | ------------------------- |
-| **Heading**      | H1/H2/H3 with alignment and color | `JSONContent` (rich text) |
-| **Text**         | Paragraph with formatting         | `JSONContent` (rich text) |
-| **Image**        | Image with src, alt, dimensions   | Static props              |
-| **Button**       | CTA button with link and styling  | Static props              |
-| **Header**       | Brand header with logo and name   | Static props              |
-| **Columns**      | 2 or 3 column layout              | Container                 |
-| **Divider**      | Horizontal rule with styling      | Static props              |
-| **Spacer**       | Vertical spacing                  | Static props              |
-| **Social Links** | Social media icon links           | Static props              |
-| **Footer**       | Footer text with formatting       | `JSONContent` (rich text) |
-
----
-
-## 📤 Export Options
-
-| Button              | Output       | Use Case                               |
-| ------------------- | ------------ | -------------------------------------- |
-| **Export HTML**     | `.html` file | Send via ESP, paste into email service |
-| **Export Template** | `.tsx` file  | Reusable React Email component         |
-
----
-
-## 🛠️ Tech Stack
-
-- **[Next.js 16](https://nextjs.org/)** — React framework with App Router
-- **[Tiptap 3.15](https://tiptap.dev/)** — Headless rich-text editor
-- **[React Email 1.0](https://react.email/)** — Email-compatible React components
-- **[@tiptap/static-renderer](https://tiptap.dev/docs/editor/api/utilities/static-renderer)** — Render Tiptap JSON to React
-- **[Radix UI](https://www.radix-ui.com/)** — Accessible UI primitives
-- **[Tailwind CSS 4](https://tailwindcss.com/)** — Utility-first styling
-- **[TypeScript 5](https://www.typescriptlang.org/)** — Type safety
-
----
-
-## 📚 Documentation
-
-Tiptap documentation is included locally in [`docs/tiptap/`](docs/tiptap/) for LLM context. Key references:
-
-- [Static Renderer](docs/tiptap/api/utilities/static-renderer.md) — Core integration technique
-- [Persistence](docs/tiptap/core-concepts/persistance.md) — Why JSON over HTML
-- [Extensions](docs/tiptap/core-concepts/extensions.md) — How Tiptap extensions work
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please ensure:
-
-1. Code passes TypeScript checks: `npx tsc --noEmit`
-2. Code passes linting: `npx oxlint .`
-3. Build succeeds: `npm run build`
-
----
-
-## 📄 License
-
-MIT
+[MIT](LICENSE)
