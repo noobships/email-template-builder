@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -15,77 +16,120 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
   Settings,
   Palette,
   AlignLeft,
   AlignCenter,
   AlignRight,
+  X,
+  Trash2,
 } from "lucide-react";
 import type { EmailBlock } from "@/types/email-builder";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-interface PropertiesPanelProps {
+interface PropertiesPopoverProps {
   selectedBlock: EmailBlock | null;
   onUpdateBlock: (blockId: string, updates: Partial<EmailBlock>) => void;
+  onClose: () => void;
+  onDelete?: () => void;
 }
 
-export function PropertiesPanel({
+export function PropertiesPopover({
   selectedBlock,
   onUpdateBlock,
-}: PropertiesPanelProps) {
+  onClose,
+  onDelete,
+}: PropertiesPopoverProps) {
+  const isMobile = useIsMobile();
+
   if (!selectedBlock) {
-    return (
-      <aside className="w-72 border-l border-border bg-background">
-        <Tabs defaultValue="block">
-          <div className="border-b border-border p-3">
-            <TabsList className="w-full">
-              <TabsTrigger value="block" className="flex-1 gap-1.5 text-xs">
-                <Settings className="h-3.5 w-3.5" />
-                Block
-              </TabsTrigger>
-              <TabsTrigger value="style" className="flex-1 gap-1.5 text-xs">
-                <Palette className="h-3.5 w-3.5" />
-                Style
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <div className="flex h-64 items-center justify-center p-4 text-center text-sm text-muted-foreground">
-            Select a block to edit its properties
-          </div>
-        </Tabs>
-      </aside>
-    );
+    return null;
   }
 
   const handleUpdate = (updates: Partial<EmailBlock>) => {
     onUpdateBlock(selectedBlock.id, updates);
   };
 
-  return (
-    <aside className="w-72 border-l border-border bg-background">
-      <Tabs defaultValue="block">
-        <div className="border-b border-border p-3">
-          <TabsList className="w-full">
-            <TabsTrigger value="block" className="flex-1 gap-1.5 text-xs">
-              <Settings className="h-3.5 w-3.5" />
-              Block
-            </TabsTrigger>
-            <TabsTrigger value="style" className="flex-1 gap-1.5 text-xs">
-              <Palette className="h-3.5 w-3.5" />
-              Style
-            </TabsTrigger>
-          </TabsList>
+  const content = (
+    <Tabs defaultValue="block" className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="block" className="gap-1.5 text-xs">
+            <Settings className="h-3.5 w-3.5" />
+            Block
+          </TabsTrigger>
+          <TabsTrigger value="style" className="gap-1.5 text-xs">
+            <Palette className="h-3.5 w-3.5" />
+            Style
+          </TabsTrigger>
+        </TabsList>
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2 h-8 w-8 shrink-0"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
+        )}
+      </div>
+
+      <ScrollArea className="flex-1 px-4">
+        <TabsContent value="block" className="mt-0 pb-4">
+          <BlockProperties block={selectedBlock} onUpdate={handleUpdate} />
+        </TabsContent>
+
+        <TabsContent value="style" className="mt-0 pb-4">
+          <StyleProperties block={selectedBlock} onUpdate={handleUpdate} />
+        </TabsContent>
+      </ScrollArea>
+
+      {onDelete && (
+        <div className="border-t p-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Block
+          </Button>
         </div>
+      )}
+    </Tabs>
+  );
 
-        <ScrollArea className="h-[calc(100vh-120px)]">
-          <TabsContent value="block" className="mt-0 p-4">
-            <BlockProperties block={selectedBlock} onUpdate={handleUpdate} />
-          </TabsContent>
+  // On mobile, use bottom sheet; on desktop, use fixed panel
+  if (isMobile) {
+    return (
+      <Sheet open={!!selectedBlock} onOpenChange={() => onClose()}>
+        <SheetContent side="bottom" className="h-[70vh] p-0">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Block Properties</SheetTitle>
+            <SheetDescription>
+              Edit block properties and styles
+            </SheetDescription>
+          </SheetHeader>
+          {content}
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
-          <TabsContent value="style" className="mt-0 p-4">
-            <StyleProperties block={selectedBlock} onUpdate={handleUpdate} />
-          </TabsContent>
-        </ScrollArea>
-      </Tabs>
+  // Desktop: floating panel on the right
+  return (
+    <aside className="w-80 shrink-0 border-l border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-col">
+      {content}
     </aside>
   );
 }

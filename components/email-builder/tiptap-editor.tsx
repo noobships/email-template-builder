@@ -24,6 +24,7 @@ interface TiptapEditorProps {
   onUpdate: (content: JSONContent) => void;
   className?: string;
   textColor?: string;
+  simulateMode?: "light" | "dark";
 }
 
 export function TiptapEditor({
@@ -31,6 +32,7 @@ export function TiptapEditor({
   onUpdate,
   className,
   textColor,
+  simulateMode = "light",
 }: TiptapEditorProps) {
   // Track if content change is from external source vs editor typing
   const isExternalUpdate = useRef(false);
@@ -74,14 +76,27 @@ export function TiptapEditor({
   }
 
   return (
-    <div className="rounded-md border border-input bg-background">
-      <EditorToolbar editor={editor} />
+    <div
+      className={cn(
+        "rounded-md border",
+        simulateMode === "dark"
+          ? "border-zinc-600 bg-zinc-800"
+          : "border-input bg-background"
+      )}
+    >
+      <EditorToolbar editor={editor} simulateMode={simulateMode} />
       <EditorContent editor={editor} />
     </div>
   );
 }
 
-function EditorToolbar({ editor }: { editor: Editor }) {
+function EditorToolbar({
+  editor,
+  simulateMode,
+}: {
+  editor: Editor;
+  simulateMode: "light" | "dark";
+}) {
   const setLink = useCallback(() => {
     const previousUrl = editor.getAttributes("link").href;
     const url = window.prompt("URL", previousUrl);
@@ -99,7 +114,12 @@ function EditorToolbar({ editor }: { editor: Editor }) {
   }, [editor]);
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-input px-2 py-1.5">
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-1 border-b px-2 py-1.5",
+        simulateMode === "dark" ? "border-zinc-600" : "border-input"
+      )}
+    >
       <Button
         variant="ghost"
         size="icon"

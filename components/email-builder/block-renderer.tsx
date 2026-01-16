@@ -9,6 +9,7 @@ import { SocialIcon } from "./social-icon";
 import { TiptapEditor } from "./tiptap-editor";
 import { generateHTML } from "@tiptap/html";
 import { emailEditorExtensions } from "@/lib/tiptap-extensions";
+import { useDesignSystem } from "@/lib/design-system-context";
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -35,12 +36,21 @@ export function BlockRenderer({
   simulateMode,
   onUpdateBlock,
 }: BlockRendererProps) {
-  const textColor = simulateMode === "dark" ? "#e5e7eb" : undefined;
+  // Get design system resolved styles
+  const { resolveBlockStyles } = useDesignSystem();
+  const resolvedStyles = resolveBlockStyles(block);
+
+  // In dark simulate mode, override colors for better contrast
+  const getDisplayColor = (resolvedColor?: string, fallback = "#000000") => {
+    if (simulateMode === "dark") return "#e5e7eb";
+    return resolvedColor ?? fallback;
+  };
 
   const renderBlock = () => {
     switch (block.type) {
-      case "heading":
+      case "heading": {
         const HeadingTag = `h${block.level}` as React.ElementType;
+        const headingColor = getDisplayColor(resolvedStyles.color);
         if (isSelected && onUpdateBlock) {
           return (
             <TiptapEditor
@@ -52,7 +62,8 @@ export function BlockRenderer({
                 block.level === 2 && "text-2xl",
                 block.level === 3 && "text-xl"
               )}
-              textColor={textColor || block.color}
+              textColor={headingColor}
+              simulateMode={simulateMode}
             />
           );
         }
@@ -66,22 +77,27 @@ export function BlockRenderer({
             )}
             style={{
               textAlign: block.align,
-              color: textColor || block.color,
+              color: headingColor,
+              fontFamily: resolvedStyles.fontFamily,
+              fontWeight: resolvedStyles.fontWeight,
             }}
             dangerouslySetInnerHTML={{
               __html: generateHTML(block.content, emailEditorExtensions),
             }}
           />
         );
+      }
 
-      case "text":
+      case "text": {
+        const textBlockColor = getDisplayColor(resolvedStyles.color, "#374151");
         if (isSelected && onUpdateBlock) {
           return (
             <TiptapEditor
               content={block.content}
               onUpdate={(content) => onUpdateBlock({ content })}
-              className="text-base leading-relaxed"
-              textColor={textColor || block.color}
+              className="leading-relaxed"
+              textColor={textBlockColor}
+              simulateMode={simulateMode}
             />
           );
         }
@@ -89,14 +105,18 @@ export function BlockRenderer({
           <div
             style={{
               textAlign: block.align,
-              color: textColor || block.color,
+              color: textBlockColor,
+              fontFamily: resolvedStyles.fontFamily,
+              fontSize: resolvedStyles.fontSize,
+              lineHeight: resolvedStyles.lineHeight,
             }}
-            className="text-base leading-relaxed"
+            className="leading-relaxed"
             dangerouslySetInnerHTML={{
               __html: generateHTML(block.content, emailEditorExtensions),
             }}
           />
         );
+      }
 
       case "image":
         return (
@@ -138,25 +158,32 @@ export function BlockRenderer({
           </div>
         );
 
-      case "button":
+      case "button": {
+        const buttonBg =
+          resolvedStyles.backgroundColor ?? block.backgroundColor;
+        const buttonText = resolvedStyles.textColor ?? block.textColor;
+        const buttonRadius = resolvedStyles.borderRadius ?? block.borderRadius;
         return (
           <div style={{ textAlign: block.align }}>
             <a
               href={block.url}
               className="inline-block px-6 py-3 text-base font-medium"
               style={{
-                backgroundColor: block.backgroundColor,
-                color: block.textColor,
-                borderRadius: block.borderRadius,
+                backgroundColor: buttonBg,
+                color: buttonText,
+                borderRadius: buttonRadius,
                 textDecoration: "none",
+                fontFamily: resolvedStyles.fontFamily,
               }}
             >
               {block.text}
             </a>
           </div>
         );
+      }
 
-      case "header":
+      case "header": {
+        const headerTextColor = getDisplayColor(undefined, "#000000");
         return (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -176,7 +203,7 @@ export function BlockRenderer({
               )}
               <span
                 className="font-semibold"
-                style={{ color: textColor || "#000000" }}
+                style={{ color: headerTextColor }}
               >
                 {block.brandName}
               </span>
@@ -186,6 +213,7 @@ export function BlockRenderer({
             )}
           </div>
         );
+      }
 
       case "columns":
         return (
@@ -212,16 +240,20 @@ export function BlockRenderer({
           </div>
         );
 
-      case "divider":
+      case "divider": {
+        const dividerColor = resolvedStyles.color ?? block.color;
+        const dividerThickness = resolvedStyles.thickness ?? block.thickness;
+        const dividerStyle = resolvedStyles.style ?? block.style;
         return (
           <hr
             style={{
-              borderColor: block.color,
-              borderWidth: block.thickness,
-              borderStyle: block.style,
+              borderColor: dividerColor,
+              borderWidth: dividerThickness,
+              borderStyle: dividerStyle,
             }}
           />
         );
+      }
 
       case "spacer":
         return <div style={{ height: block.height }} />;
@@ -260,14 +292,16 @@ export function BlockRenderer({
           </div>
         );
 
-      case "footer":
+      case "footer": {
+        const footerColor = getDisplayColor(resolvedStyles.color, block.color);
         if (isSelected && onUpdateBlock) {
           return (
             <TiptapEditor
               content={block.content}
               onUpdate={(content) => onUpdateBlock({ content })}
               className="text-sm"
-              textColor={textColor || block.color}
+              textColor={footerColor}
+              simulateMode={simulateMode}
             />
           );
         }
@@ -276,13 +310,71 @@ export function BlockRenderer({
             className="text-sm"
             style={{
               textAlign: block.align,
-              color: textColor || block.color,
+              color: footerColor,
+              fontFamily: resolvedStyles.fontFamily,
+              fontSize: resolvedStyles.fontSize,
             }}
             dangerouslySetInnerHTML={{
               __html: generateHTML(block.content, emailEditorExtensions),
             }}
           />
         );
+      }
+
+      case "list": {
+        const listColor = getDisplayColor(resolvedStyles.color, block.color);
+        if (isSelected && onUpdateBlock) {
+          return (
+            <TiptapEditor
+              content={block.content}
+              onUpdate={(content) => onUpdateBlock({ content })}
+              textColor={listColor}
+              simulateMode={simulateMode}
+            />
+          );
+        }
+        return (
+          <div
+            style={{
+              color: listColor,
+              fontFamily: resolvedStyles.fontFamily,
+            }}
+            dangerouslySetInnerHTML={{
+              __html: generateHTML(block.content, emailEditorExtensions),
+            }}
+          />
+        );
+      }
+
+      case "blockquote": {
+        const quoteColor = getDisplayColor(resolvedStyles.color, block.color);
+        if (isSelected && onUpdateBlock) {
+          return (
+            <TiptapEditor
+              content={block.content}
+              onUpdate={(content) => onUpdateBlock({ content })}
+              textColor={quoteColor}
+              simulateMode={simulateMode}
+            />
+          );
+        }
+        return (
+          <blockquote
+            style={{
+              color: quoteColor,
+              borderLeftColor: resolvedStyles.borderColor,
+              borderLeftWidth: 3,
+              borderLeftStyle: "solid",
+              paddingLeft: 16,
+              fontFamily: resolvedStyles.fontFamily,
+              fontStyle: "italic",
+            }}
+            dangerouslySetInnerHTML={{
+              __html: generateHTML(block.content, emailEditorExtensions),
+            }}
+          />
+        );
+      }
 
       default:
         return null;

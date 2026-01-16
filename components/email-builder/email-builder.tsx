@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { EmailBuilderHeader } from "./header";
-import { ElementsSidebar } from "./elements-sidebar";
+import { BlockPickerToolbar } from "./block-picker-toolbar";
 import { EmailCanvas } from "./email-canvas";
-import { PropertiesPanel } from "./properties-panel";
+import { PropertiesPopover } from "./properties-popover";
+import { TemplateHistory } from "./template-history";
 import type {
   EmailBlock,
   EmailDocument,
   BlockType,
 } from "@/types/email-builder";
 import { createBlock } from "@/lib/email-builder-utils";
+import { DesignSystemProvider } from "@/lib/design-system-context";
+import {
+  TemplateStorageProvider,
+  useTemplateStorage,
+} from "@/lib/template-storage-context";
+import { DesignSystemManager } from "./design-system-manager";
 
 const initialDocument: EmailDocument = {
   name: "Untitled Email",
@@ -21,13 +28,44 @@ const initialDocument: EmailDocument = {
   },
 };
 
-export function EmailBuilder() {
+/**
+ * Inner component that uses template storage context.
+ */
+function EmailBuilderInner() {
   const [document, setDocument] = useState<EmailDocument>(initialDocument);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
   const [simulateMode, setSimulateMode] = useState<"light" | "dark">("light");
+  const [editorMode, setEditorMode] = useState<"editing" | "viewing">(
+    "editing"
+  );
   const [history, setHistory] = useState<EmailDocument[]>([initialDocument]);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
+  const [designSystemManagerOpen, setDesignSystemManagerOpen] = useState(false);
+
+  const { saveTemplate, createNewTemplate, templates } = useTemplateStorage();
+
+  // Auto-load most recent template on mount
+  useEffect(() => {
+    if (templates.length > 0) {
+      const mostRecent = templates.reduce((a, b) =>
+        a.updatedAt > b.updatedAt ? a : b
+      );
+      setDocument(mostRecent.document);
+    }
+  }, []); // Only run on mount
+
+  // Auto-save document (debounced)
+  useEffect(() => {
+    if (document.blocks.length === 0 && document.name === "Untitled Email") {
+      return; // Don't save empty initial documents
+    }
+    const timeoutId = setTimeout(() => {
+      saveTemplate(document);
+    }, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [document, saveTemplate]);
 
   const selectedBlock =
     document.blocks.find((b) => b.id === selectedBlockId) || null;
@@ -143,38 +181,107 @@ export function EmailBuilder() {
     [document]
   );
 
+  const handleCloseProperties = useCallback(() => {
+    setSelectedBlockId(null);
+  }, []);
+
+  const handleNewTemplate = useCallback(() => {
+    createNewTemplate();
+    setDocument(initialDocument);
+    setHistory([initialDocument]);
+    setHistoryIndex(0);
+    setSelectedBlockId(null);
+  }, [createNewTemplate]);
+
+  const handleLoadTemplate = useCallback((doc: EmailDocument) => {
+    setDocument(doc);
+    setHistory([doc]);
+    setHistoryIndex(0);
+    setSelectedBlockId(null);
+  }, []);
+
   return (
-    <div className="flex h-screen flex-col bg-background">
-      <EmailBuilderHeader
-        documentName={document.name}
-        onNameChange={handleNameChange}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        simulateMode={simulateMode}
-        onSimulateModeChange={setSimulateMode}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        canUndo={historyIndex > 0}
-        canRedo={historyIndex < history.length - 1}
-        document={document}
-      />
-      <div className="flex flex-1 overflow-hidden">
-        <ElementsSidebar onAddBlock={handleAddBlock} />
-        <EmailCanvas
-          document={document}
-          selectedBlockId={selectedBlockId}
-          onSelectBlock={setSelectedBlockId}
-          onDeleteBlock={handleDeleteBlock}
-          onMoveBlock={handleMoveBlock}
-          onUpdateBlock={handleUpdateBlock}
+    <DesignSystemProvider>
+      <div className="flex h-screen flex-col bg-background">
+        {/* Header with document name, view controls, export */}
+        <EmailBuilderHeader
+          documentName={document.name}
+          onNameChange={handleNameChange}
           viewMode={viewMode}
+          onViewModeChange={setViewMode}
           simulateMode={simulateMode}
+          onSimulateModeChange={setSimulateMode}
+          editorMode={editorMode}
+          onEditorModeChange={setEditorMode}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={historyIndex > 0}
+          canRedo={historyIndex < history.length - 1}
+          document={document}
+          onNewTemplate={handleNewTemplate}
+          onOpenHistory={() => setHistoryPanelOpen(true)}
         />
-        <PropertiesPanel
-          selectedBlock={selectedBlock}
-          onUpdateBlock={handleUpdateBlockWithHistory}
+
+        {/* Block picker toolbar - only in editing mode */}
+        {editorMode === "editing" && (
+          <BlockPickerToolbar
+            onAddBlock={handleAddBlock}
+            onManageDesignSystemClick={() => setDesignSystemManagerOpen(true)}
+          />
+        )}
+
+        {/* Main canvas area */}
+        <div className="flex flex-1 overflow-hidden">
+          <EmailCanvas
+            document={document}
+            selectedBlockId={selectedBlockId}
+            onSelectBlock={setSelectedBlockId}
+            onDeleteBlock={handleDeleteBlock}
+            onMoveBlock={handleMoveBlock}
+            onUpdateBlock={handleUpdateBlock}
+            viewMode={viewMode}
+            simulateMode={simulateMode}
+          />
+
+          {/* Floating properties popover - only in editing mode */}
+          {editorMode === "editing" && (
+            <PropertiesPopover
+              selectedBlock={selectedBlock}
+              onUpdateBlock={handleUpdateBlockWithHistory}
+              onClose={handleCloseProperties}
+              onDelete={
+                selectedBlockId
+                  ? () => handleDeleteBlock(selectedBlockId)
+                  : undefined
+              }
+            />
+          )}
+        </div>
+
+        {/* Template History Sheet */}
+        <TemplateHistory
+          open={historyPanelOpen}
+          onOpenChange={setHistoryPanelOpen}
+          onLoadTemplate={handleLoadTemplate}
+        />
+
+        {/* Design System Manager Sheet */}
+        <DesignSystemManager
+          open={designSystemManagerOpen}
+          onOpenChange={setDesignSystemManagerOpen}
         />
       </div>
-    </div>
+    </DesignSystemProvider>
+  );
+}
+
+/**
+ * Email Builder with providers.
+ */
+export function EmailBuilder() {
+  return (
+    <TemplateStorageProvider>
+      <EmailBuilderInner />
+    </TemplateStorageProvider>
   );
 }
